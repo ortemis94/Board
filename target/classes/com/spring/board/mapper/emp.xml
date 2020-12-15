@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="emp">
+
+	<select id="deptIdList" resultType="String">
+		select distinct nvl(department_id, -9999) as department_id 
+		from employees 
+		order by department_id
+	</select>
+	
+	
+	<resultMap type="HashMap" id="empDeptMap">
+		<result property="department_id" 	column="department_id" 		javaType="String" />
+		<result property="department_name" 	column="department_name" 	javaType="String" />
+		<result property="employee_id" 		column="employee_id" 		javaType="String" />
+		<result property="fullname" 		column="fullname" 			javaType="String" />
+		<result property="hire_date" 		column="hire_date" 			javaType="String" />
+		<result property="monthsal" 		column="monthsal" 			javaType="String" />
+		<result property="gender" 			column="gender" 			javaType="String" />
+		<result property="age" 				column="age" 				javaType="String" />
+	</resultMap>
+	<select id="empList" parameterType="HashMap" resultMap="empDeptMap">
+		select E.department_id, D.department_name, E.employee_id, 
+	           E.first_name || ' ' || E.last_name AS fullname,
+	           to_char(E.hire_date, 'yyyy-mm-dd') AS hire_date,
+	           nvl(E.salary + E.salary*E.commission_pct, E.salary) AS monthsal,
+	           func_gender(E.jubun) AS gender,
+	           func_age(E.jubun) AS age 
+	    from employees E left join departments D
+	    on E.department_id = D.department_id
+	    where 1=1 
+	    <if test="deptIdArr != null">
+	    	and nvl(E.department_id, -9999) in 
+	    	<foreach collection="deptIdArr" index="i" open="(" separator="," close=")">
+	    		'${deptIdArr[i]}'
+	    	</foreach>
+	    </if>
+	    <if test="gender != null">
+	        and func_gender(E.jubun) = #{gender} 
+	    </if>
+	    order by E.department_id, E.employee_id
+	</select>
+
+</mapper>
